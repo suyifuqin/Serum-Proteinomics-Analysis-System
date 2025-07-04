@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Serum Proteinomics Analysis System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .feature-input { min-width: 120px; }
+        .probability-bar { height: 24px; }
+        .model-card { transition: all 0.3s ease; cursor: pointer; }
+        .model-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .intro-card { background-color: #f8f9fa; border-left: 5px solid #042c68; }
+        .model-description { font-size: 0.9rem; }
+        .gene-list { font-size: 0.85rem; color: #6c757d; }
+        .class-badge { font-size: 0.9rem; white-space: nowrap; }
+        .prediction-classes { font-size: 0.8rem; }
+        .feature-label { font-size: 0.9rem; margin-bottom: 0.5rem; }
+        .feature-group { margin-bottom: 1.2rem; }
+    </style>
+</head>
+<body class="container py-4">
+    <div class="card shadow">
+        <div class="card-header text-white" style="background-color: #032547;">
+            <h2 class="mb-0"><i class="bi bi-dna"></i> Serum Proteinomics Analysis System</h2>
+        </div>
+        
+        <div class="card-body">
+            <!-- System Introduction -->
+            <div class="intro-card p-4 mb-4 rounded">
+                <h4><i class="bi bi-info-circle"></i> System Introduction</h4>
+                <p>This system provides gene expression data analysis and prediction functions based on machine learning algorithms for predicting sample intervention stage categories.</p>
+                <p class="mb-0"><small class="text-muted">Current Version: 1.0.0 | Research Trial</small></p>
+            </div>
+
+            <!-- Model Selection -->
+            <form method="post" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <label for="model" class="form-label fw-bold"><i class="bi bi-diagram-3"></i> Select Prediction Model:</label>
+                        <select name="model" id="model" class="form-select" required onchange="this.form.submit()">
+                            <option value="">-- Please Select Model --</option>
+                            {% for model_name in models %}
+                                <option value="{{ model_name }}" {% if selected_model == model_name %}selected{% endif %}>
+                                    {{ model_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-text">
+                            <i class="bi bi-lightbulb"></i> Tip: Select a model to view required genes and prediction categories
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Guide Interface When No Model Selected -->
+            {% if not selected_model %}
+                <div class="mt-4">
+                    <h4 class="mb-3 text-center"><i class="bi bi-collection"></i> Available Prediction Models (Total: {{ models|length }})</h4>
+                    <p class="text-center text-muted mb-4">5 models corresponding to early stage, acute stage, recovery stage, early low-dose analysis, and late low-dose analysis</p>
+                    
+                    <div class="row g-4">
+                        {% for model_name, config in model_config.items() %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card model-card h-100" onclick="document.getElementById('model').value='{{ model_name }}'; document.forms[0].submit()">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">
+                                        <i class="bi bi-robot"></i> {{ model_name }}
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="model-description">
+                                        <i class="bi bi-algorithm"></i> 
+                                        {{ 'Early' in model_name and 'Support Vector Machine' or 'Acute' in model_name and 'Multi-layer Perceptron' or 'Random Forest' }} model
+                                        | Requires {{ config['features']|length }} genes
+                                    </p>
+                                    <p class="mb-1 fw-bold"><i class="bi bi-gene"></i> Required Genes:</p>
+                                    <p class="gene-list">{{ config['features']|join(', ') }}</p>
+                                    <p class="mb-1 fw-bold mt-2"><i class="bi bi-funnel"></i> Prediction Categories:</p>
+                                    <p class="gene-list prediction-classes">{{ config['classes']|join(' → ') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <!-- Input Form After Model Selection -->
+                <form method="post" class="mb-4">
+                    <input type="hidden" name="model" value="{{ selected_model }}">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4><i class="bi bi-input-cursor-text"></i> {{ selected_model }} Gene Input</h4>
+                        <span class="badge bg-info">
+                            {{ model_config[selected_model]['features']|length }} genes | 
+                            {{ model_config[selected_model]['classes']|length }} categories
+                        </span>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        {% for feature, example in feature_examples %}
+                            <div class="col-lg-2-4 col-md-3 col-sm-4 col-6">
+                                <div class="feature-group">
+                                    <label for="{{ feature }}" class="form-label feature-label">{{ feature }}</label>
+                                    <input type="number" id="{{ feature }}" name="{{ feature }}"
+                                        step="any" min="0"
+                                        class="form-control feature-input"
+                                        value="{{ request.form[feature] if request.form and request.form[feature] else example }}"
+                                        required>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-primary px-4 py-2">
+                            <i class="bi bi-calculator"></i> Submit Prediction
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Error Display -->
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+                    </div>
+                {% endif %}
+
+                <!-- Prediction Results Display -->
+                {% if result %}
+                    <div class="card border-success mt-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Prediction Results</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-primary">
+                                <h5 class="alert-heading">
+                                    <i class="bi bi-check-circle"></i> Final Prediction: 
+                                    <span class="badge bg-primary class-badge">
+                                        {{ model_config[selected_model]['classes'][result.class] }}
+                                        <small>(Category {{ result.class }})</small>
+                                    </span>
+                                </h5>
+                                <hr>
+                                <p class="mb-0">
+                                    <i class="bi bi-lightbulb"></i> 
+                                    Probability of {{ model_config[selected_model]['classes'][result.class] }}: 
+                                    <strong>{{ "%.2f"|format(result.probabilities[result.class] * 100) }}%</strong>
+                                </p>
+                            </div>
+                            
+                            <h5 class="mb-3"><i class="bi bi-percent"></i> Category Probability Distribution:</h5>
+                            <div class="row g-3">
+                                {% for prob in result.probabilities %}
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>
+                                                <span class="badge bg-secondary">{{ loop.index0 }}</span>
+                                                {{ model_config[selected_model]['classes'][loop.index0] }}:
+                                            </span>
+                                            <span>{{ "%.2f"|format(prob * 100) }}%</span>
+                                        </div>
+                                        <div class="progress probability-bar">
+                                            <div class="progress-bar {% if loop.index0 == result.class %}bg-success{% else %}bg-info{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ prob * 100 }}%"
+                                                 aria-valuenow="{{ prob * 100 }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mt-4">
+                                <h5><i class="bi bi-database"></i> Input Data Used:</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                {% for feature, _ in feature_examples %}
+                                                    <th>{{ feature }}</th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                {% for val in result.input_data %}
+                                                    <td>{{ "%.4f"|format(val) }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- SHAP Plots -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h5><i class="bi bi-graph-up"></i> SHAP Decision Plot</h5>
+                                    <img src="{{ url_for('static', filename=result.decision_plot.split('/')[-1]) }}" 
+                                        class="img-fluid border rounded" alt="SHAP Decision Plot">
+                                </div>
+                                <div class="col-md-6">
+                                    <h5><i class="bi bi-bar-chart"></i> SHAP Waterfall Plot</h5>
+                                    <img src="{{ url_for('static', filename=result.waterfall_plot.split('/')[-1]) }}" 
+                                        class="img-fluid border rounded" alt="SHAP Waterfall Plot">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <footer class="mt-4 text-center text-muted">
+        <small><i class="bi bi-c-circle"></i> Serum Proteinomics Analysis System | Research Use Only | 2025</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* Custom column width for 5-column layout */
+        @media (min-width: 992px) {
+            .col-lg-2-4 {
+                flex: 0 0 auto;
+                width: 20%;
+            }
+        }
+    </style>
+    <script>
+        // Auto-select model when clicking model card
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const modelName = this.querySelector('h5').textContent.trim();
+                document.getElementById('model').value = modelName;
+                document.forms[0].submit();
+            });
+        });
+    </script>
+</body>
+</html>
