@@ -36,35 +36,35 @@ MODEL_CONFIG = {
         'features': ['Serpina3n', 'Saa4', 'Hp', 'Saa1', 'Coro1a', 'Psmb8', 'Timp2'],
         'example': [4646170, 630474, 8956846, 194747, 64055, 69838, 31112],
         'classes': ['Normal', 'Treatment', 'Sublethal', 'Lethal'],
-        'train_data':"./traindata/早期/7p_svm.csv"
+        'train_data':"./sampledata/早期/7p_svm.csv"
     },
     'Acute-5Gene': {
         'path': 'models/急期MLP-5Gene.pkl',
         'features': ['Sell', 'Ltf', 'Masp1', 'Bpifa2', 'lgfals'],
         'example': [8346, 3554, 159208, 51349, 523320],
         'classes': ['Normal', 'Treatment', 'Sublethal', 'Lethal'],
-        'train_data': "./traindata/急期/5p_mlp.csv"
+        'train_data': "./sampledata/急期/5p_mlp.csv"
     },
     'Prognosis-3Gene': {
         'path': 'models/预后RF-3Gene.pkl',
         'features': ['Sell', 'Thbs1', 'Pf4'],
         'example': [30000, 4500000, 2000000],
         'classes': ['Good prognosis', 'Poor prognosis'],
-        'train_data': "./traindata/恢复期/3p_rf.csv"
+        'train_data': "./sampledata/恢复期/3p_rf.csv"
     },
     'Low-dose Early-9Gene': {
         'path': 'models/低剂量早期RF-9Gene.pkl',
         'features': ['Psmb10', 'Coro1a', 'Ngp',  'Psma6','lgfbp4', 'Ca1', 'Psmb8', 'Msn', 'Psma1'],
         'example': [10000, 12000, 13000, 45100, 40000, 80000, 35000, 8000, 9000],
         'classes': ['Normal', 'LDR', 'Treatment'],
-        'train_data':"./traindata/低剂量/9p_rf.csv"
+        'train_data':"./sampledata/低剂量/9p_rf.csv"
     },
     'Low-dose Late-3Gene': {
         'path': 'models/低剂量晚期RF-3Gene.pkl',
         'features': [ 'GCAB','Gm5629', 'KV3A1'],
         'example': [24751412, 676437, 12740307], 
         'classes': ['Others', 'LDR'],
-        'train_data':"./traindata/低剂量/3p_rf.csv"
+        'train_data':"./sampledata/低剂量/3p_rf.csv"
     }
 }
 
